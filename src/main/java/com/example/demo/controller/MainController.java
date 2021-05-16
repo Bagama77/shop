@@ -4,12 +4,14 @@ import com.example.demo.entity.Bin;
 import com.example.demo.entity.BinItem;
 import com.example.demo.entity.Item;
 import com.example.demo.entity.User;
+import com.example.demo.manager.ItemManager;
+import com.example.demo.manager.UserManager;
+import com.example.demo.repositories.BinItemRepository;
 import com.example.demo.repositories.BinRepository;
-import com.example.demo.repositories.ItemRepository;
-import com.example.demo.repositories.UserRepository;
 import com.sun.istack.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,42 +21,50 @@ import java.util.List;
 public class MainController {
 
     @Autowired
-    UserRepository userRepository;
+    ItemManager itemManager;
+
+    @Autowired
+    UserManager userManager;
+
+    @Autowired
+    BinItemRepository binItemRepository;
 
     @Autowired
     BinRepository binRepository;
 
-    @Autowired
-    ItemRepository itemRepository;
-
 
     @GetMapping("/home")
-    public String helloShop() {
-        return "index";
+    public String helloShop(Model model) {
+        List<Item> items = itemManager.getAll();
+
+        model.addAttribute("items", items);
+        model.addAttribute("quantity", items.size());
+
+        return "home2";
     }
 
     @PostMapping(path = "/user/add")
     public @ResponseBody User addNewPerson(@RequestBody User user) {
-        userRepository.save(user);
+        userManager.addUser(user);
         return user;
     }
 
     @GetMapping(path = "/users/all")
     public @ResponseBody Iterable<User> getAllUsers() {
-        return userRepository.findAll();
+        return userManager.getAllUsers();
     }
 
     @PostMapping(path = "/bin/add{userid}")
     public @ResponseBody Bin addNewBin(@RequestParam("userid") long userId) {
         Bin bin = new Bin();
-        bin.setUser(userRepository.findById(userId).orElseThrow());
+        bin.setUser(userManager.getUserById(userId));
         binRepository.save(bin);
         return bin;
     }
 
     @PostMapping(path = "/item/add")
     public @ResponseBody Item addNewItem(@RequestBody Item item) {
-        itemRepository.save(item);
+        itemManager.addItem(item);
         return item;
     }
 
